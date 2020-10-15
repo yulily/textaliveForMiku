@@ -1,32 +1,27 @@
-import React, { useEffect, useState, createRef, useMemo } from "react";
-import { Player, Ease } from "textalive-app-api"
-import p5 from 'p5'
+import React, { useEffect, useState, useMemo } from "react";
+import { Player } from "textalive-app-api"
 import MoveLyric from './moveLyric'
-import fallLyricWorker from "worker-loader!./worker";
+import lyricWorker from "worker-loader!./worker";
 
-const worker = new fallLyricWorker();
+const worker = new lyricWorker();
 
 export const PlayerControl = () => {
-    const [textPlayer, setPlayer] = useState<Player | null>(null);
-    const [app, setApp] = useState(null);
+    const [, setPlayer] = useState<Player | null>(null);
+    const [, setApp] = useState(null);
 
     const [song, setSong] = useState<string>('');
     const [artist, setArtist] = useState<string>('');
-    // const [songInfo, setSongInfo] = useState<HTMLElement>(''); 再生後に消す
 
     const [mediaElement, setMediaElement] = useState<HTMLDivElement | null>(null);
     const mdediaDiv = useMemo(() => <div className="media movie" ref={setMediaElement} />, []);
 
-    let drawCanvas:p5|null = useMemo(() => null, []);
     const width = window.innerWidth;
     const height = window.innerHeight;
-    // const collors = ["rgb(187,225,14)", "rgb(237,139,190)"];
 
-    let p5CanvasElement: HTMLCanvasElement | null = null;
     let offscreenCanvas: OffscreenCanvas | null = null;
 
     let playing: boolean = false;
-    let time: number = 0;
+
     useEffect(() => {
         if (typeof window === "undefined" || !mediaElement) {
             return;
@@ -51,6 +46,10 @@ export const PlayerControl = () => {
                     textPlayer.createFromSongUrl("http://www.youtube.com/watch?v=xOKplMgHxxA");
                 }
                 setApp(app);
+                let canvasElement = document.getElementById('canvasElement') as HTMLCanvasElement;
+                offscreenCanvas = canvasElement.transferControlToOffscreen();
+                console.log("init offscreenCanvas");
+                worker.postMessage({ action: "init", size: { width: width, height: height }, canvas: offscreenCanvas }, [offscreenCanvas]);
             },
             // 音源の再生準備が完了した時に呼ばれる
             onTimerReady: (timer: any) => {},
@@ -59,34 +58,16 @@ export const PlayerControl = () => {
                 // 楽曲情報を表示
                 setSong(textPlayer.data.song.name);
                 setArtist(textPlayer.data.song.artist.name);
-
-                let time = 0;
-                drawCanvas = new p5((p5: p5) => {
-                    p5.setup = () => {
-                        let cnv = p5.createCanvas(width, height);
-                        cnv.id('p5CanvasElement');
-                        p5.noStroke();
-                        p5.frameRate(10);
-
-                        p5CanvasElement = document.getElementById('p5CanvasElement') as HTMLCanvasElement;
-                        offscreenCanvas = p5CanvasElement.transferControlToOffscreen();
-                    }
-                })
             },
             // 動画の再生位置が変更されたときに呼ばれる
             onTimeUpdate: (position: number) => {
                 // プレイヤーが準備できていなかったら何もしない
-                if (p5CanvasElement === null || drawCanvas === null || !playing || !textPlayer || !textPlayer.video) {
-                    return;
-                }
-
-                if (time < 1) {
-                    drawCanvas.background('rgba(246, 221, 191, ' + Ease.circIn(Math.min(time, 1)) + ')');
-                    time += 0.1;
+                if (offscreenCanvas === null || !playing || !textPlayer || !textPlayer.video) {
                     return;
                 }
 
                 let char = textPlayer.video.findChar(position - 100, { loose: true });
+                console.log(char.text);
                 if (char === null) {
                     return;
                 }
@@ -94,8 +75,6 @@ export const PlayerControl = () => {
 
                 let startTime = char.startTime;
                 let endTime = char.endTime;
-
-                drawCanvas.background('#F6DDBF');
 
                 if (startTime < position + 100) {
                     const beat = textPlayer.findBeat(position);
@@ -109,36 +88,28 @@ export const PlayerControl = () => {
 
                     let transparency: number = 0, size: number = 40;
 
+                    const moveLyricInstance = new MoveLyric({
+                        canvas: null,
+                        x: x,
+                        y: y,
+                        height: height,
+                        char: char.text
+                    });
+
                     // 開始前
                     if (position < startTime) {
                         const progress = 1 - (startTime - position) / 100;
                         transparency = progress;
-                        console.log("開始前");
                     }
                     // 表示終了
                     else if (endTime < position) {
-                        console.log("表示終了");
-                        const moveLyricInstance = new MoveLyric({
-                            canvas: offscreenCanvas,
-                            x: x,
-                            y: y,
-                            height: height,
-                            char: char.text
-                        });
-                        if (offscreenCanvas) {
-                            worker.postMessage({ action: "init", moveLyric: moveLyricInstance }, [
-                                offscreenCanvas
-                            ]);
-                        }
-                        console.log("postMessage");
+                        worker.postMessage({ action: "fallLyric", size: { width: width, height: height }, moveLyricInstance: moveLyricInstance });
                         // 発声前
                     } else {
-                        console.log("発声前");
                         transparency = 1;
                     }
-                    drawCanvas.fill(0, 0, 100, transparency * 100);
-                    drawCanvas.textSize(size);
-                    drawCanvas.text(char.text, 10 + x, y);
+
+                    worker.postMessage({ action: "setChar", size: { width: width, height: height }, moveLyricInstance: moveLyricInstance });
                 }
             },
             // 動画の再生位置が変更されたときに呼ばれる（あまりに頻繁な発火を防ぐため一定間隔に間引かれる）
@@ -178,6 +149,7 @@ export const PlayerControl = () => {
                 </dl>
             </div>
             {mdediaDiv}
+            <canvas id="canvasElement" width={window.innerWidth} height={window.innerHeight} className="canvasElement" ref={React.createRef()} />   
         </>
     );
 }
