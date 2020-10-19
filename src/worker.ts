@@ -2,6 +2,9 @@ const ctx: Worker = self as any;
 import MoveLyric from './moveLyric'
 
 let offscreenCanvas: OffscreenCanvas|null = null;
+let context: OffscreenCanvasRenderingContext2D | null = null;
+
+const fontSize = 25;
 const collors = ["rgb(187,225,14)", "rgb(237,139,190)"];
 
 ctx.addEventListener('message', event => {
@@ -11,17 +14,11 @@ ctx.addEventListener('message', event => {
             console.log('You need to call init first');
         }
         offscreenCanvas = event.data.canvas;
+        context = offscreenCanvas!.getContext("2d");
     }
 
-    if (!offscreenCanvas === null) {
-        console.log("couldn't get the offscreenCanvas");
-        return;
-    }
-
-    let context: OffscreenCanvasRenderingContext2D | null = offscreenCanvas!.getContext("2d");
-
-    if (context === null) {
-        console.log("couldn't get the OffscreenCanvasRenderingContext2D");
+    if (offscreenCanvas === null || context === null) {
+        console.log("couldn't get the offscreenCanvas or couldn't get the OffscreenCanvasRenderingContext2D");
         return;
     }
 
@@ -52,9 +49,9 @@ ctx.addEventListener('message', event => {
                 context.fillRect(0, 0, width, height);
 
                 time += 0.1;
-                let myReq = requestAnimationFrame(fadeIn);
+                let callbackId = requestAnimationFrame(fadeIn);
                 if (1 <= time) {
-                    cancelAnimationFrame(myReq);
+                    cancelAnimationFrame(callbackId);
                 }
             }
             fadeIn();
@@ -67,37 +64,50 @@ ctx.addEventListener('message', event => {
             context.fillStyle = 'rgb(246, 221, 191)';
             context.fillRect(0, 0, width, height);
 
-            context.font = "20px 'ＭＳ ゴシック'";
-            context.fillStyle = 'rgba(237,139,190, 100)';
+            context.font = fontSize + "px 'Hannari,sans-serif'";
+            context.fillStyle = 'rgb(237,139,190)';
             context.fillText(charText, x, y);
             break;
         case 'fallLyric':
             if (moveLyricInstance === null) {
                 console.log("'fallLyric' requires a moveLyricInstance");
                 return;
-            }
-            let fall = () => {
-                if (context === null) {
-                    return;
-                }
-                y += height / 300;
-
-                context.fillStyle = 'rgb(246, 221, 191)';
-                context.fillRect(0, 0, width, height);
-
-                context.font = "20px 'ＭＳ ゴシック'";
-                context.fillStyle = 'rgba(237,139,190, 100)';
-                context.fillText(charText, x, y);
-                let myReq = requestAnimationFrame(fall);
-                if (y <= height) {
-                    cancelAnimationFrame(myReq);
-                }
-            }
-            fall();
+            }            
+            fall(charText, x, y, height);
             break;
         default:
             console.log('undefind action');
     }
 });
 
+let fall = (charText: string, x: number, y: number, height: number) => {
+    loop();
+
+    y = Math.floor(y);
+    function loop(){
+        if (context !== null) {
+            let callbackId = requestAnimationFrame(loop);
+
+            let diffY = Math.floor(height / 40) * easeInOutSine(y / height);
+
+            context.fillStyle = 'rgb(246, 221, 191)';
+            context.fillRect(x, y - diffY - fontSize, fontSize, fontSize);
+            
+            context.font = fontSize + "px 'Hannari,sans-serif'";
+            context.fillStyle = 'rgba(237,139,190, 100)';
+            context.fillText(charText, x, y);
+
+            y += diffY;
+            if (height < y) {
+                context.fillStyle = 'rgb(246, 221, 191)';
+                context.fillRect(x, y - diffY - fontSize, fontSize, fontSize);
+                cancelAnimationFrame(callbackId);
+            }
+        }
+    }
+}
+
+function easeInOutSine(x: number): number {
+    return -(Math.cos(Math.PI * x) - 1) / 2;
+}
 export default ctx

@@ -15,12 +15,12 @@ export const PlayerControl = () => {
     const [mediaElement, setMediaElement] = useState<HTMLDivElement | null>(null);
     const mdediaDiv = useMemo(() => <div className="media movie" ref={setMediaElement} />, []);
 
-    const width = window.innerWidth;
-    const height = window.innerHeight;
+    const width: number = window.innerWidth, height: number = window.innerHeight;
 
     let offscreenCanvas: OffscreenCanvas | null = null;
-
     let playing: boolean = false;
+
+    let lastChar: string = '', lastStartTime: number = 0, lastEndTime: number = 0;
 
     useEffect(() => {
         if (typeof window === "undefined" || !mediaElement) {
@@ -67,7 +67,6 @@ export const PlayerControl = () => {
                 }
 
                 let char = textPlayer.video.findChar(position - 100, { loose: true });
-                console.log(char.text);
                 if (char === null) {
                     return;
                 }
@@ -103,6 +102,13 @@ export const PlayerControl = () => {
                     }
                     // 表示終了
                     else if (endTime < position) {
+                        if (lastChar === char.text && lastStartTime === startTime && lastEndTime === endTime) {
+                            return;
+                        }
+                        lastChar = char.text;
+                        lastStartTime = startTime;
+                        lastEndTime = endTime;
+
                         worker.postMessage({ action: "fallLyric", size: { width: width, height: height }, moveLyricInstance: moveLyricInstance });
                         // 発声前
                     } else {
