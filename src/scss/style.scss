@@ -1,16 +1,25 @@
 //@charset "UTF-8";
+@font-face {
+    font-family: 'Hannari';
+    src: url('./Hannari.otf') format('opentype')
+}
 body {
     width: 100%;
     height: 100%;
     position: relative;
-    background: rgba(87, 89, 94, 0.7);
+    background: rgba(24, 23, 24, 0.7);
+    font-family: 'Hannari';
     #root {
         width: 100%;
         height: 100%;
         position: relative;
+        .media {
+            border: solid 10px #906e67;
+            box-shadow: 3px 3px 5px 5px rgba(0, 0, 0, 0.3);
+        }
         .songInfo {
             position: absolute;
-            top: 53%;
+            top: 60%;
             left: 55%;
             z-index: 1;
             dl {
@@ -23,11 +32,12 @@ body {
                 background: rgba(255, 255, 255, 0.7);
                 border-radius: 15px;
                 dt {
-                    background: rgba(255, 228, 214, 0.7);
+                    border-radius: 3px;
                     padding: 2%;
+                    border-bottom: 2px solid #866868;        
+                    background: rgba(253, 231, 237, 0.7);
                 }
                 dd {
-                    background: rgba(202, 255, 248, 0.7);
                     padding: 2%;
                 }
             }

@@ -42,17 +42,17 @@ export const PlayerControl = () => {
             onAppReady: (app: any) => {
                 if (!app.songUrl) {
                     // 楽曲URLが指定されていなければ youtube 指定
-                    // textPlayer.createFromSongUrl("http://www.youtube.com/watch?v=a-Nf3QUFkOU");
-                    textPlayer.createFromSongUrl("http://www.youtube.com/watch?v=xOKplMgHxxA");
+                    textPlayer.createFromSongUrl("http://www.youtube.com/watch?v=a-Nf3QUFkOU");
                 }
                 setApp(app);
+            },
+            // 音源の再生準備が完了した時に呼ばれる
+            onTimerReady: (timer: any) => {
                 let canvasElement = document.getElementById('canvasElement') as HTMLCanvasElement;
                 offscreenCanvas = canvasElement.transferControlToOffscreen();
                 console.log("init offscreenCanvas");
                 worker.postMessage({ action: "init", size: { width: width, height: height }, canvas: offscreenCanvas }, [offscreenCanvas]);
             },
-            // 音源の再生準備が完了した時に呼ばれる
-            onTimerReady: (timer: any) => {},
             // 動画オブジェクトの準備が整ったとき（楽曲に関する情報を読み込み終わったとき）に呼ばれる
             onVideoReady: () => {
                 // 楽曲情報を表示
@@ -82,7 +82,7 @@ export const PlayerControl = () => {
                         progress = beat.progress(position);
                     }
 
-                    let x = 50 * (index % Math.floor(width / 50)) + 10;
+                    let x = 50 * (index % Math.floor((width - width / 5) / 50)) + (width / 5)/2;
                     let y = height / 5;
 
                     let transparency: number = 0, size: number = 40;

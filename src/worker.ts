@@ -5,8 +5,8 @@ let offscreenCanvas: OffscreenCanvas|null = null;
 let context: OffscreenCanvasRenderingContext2D | null = null;
 
 const fontSize = 25;
-const collors = ["rgb(187,225,14)", "rgb(237,139,190)"];
-
+const collors = ["rgb(187,225,14)", "rgb(250, 246, 240)"];
+const fontStyle = fontSize + "px '游明朝体', 'YuMincho'";
 ctx.addEventListener('message', event => {
 
     if (!offscreenCanvas) {
@@ -45,7 +45,7 @@ ctx.addEventListener('message', event => {
                 if (context === null) {
                     return;
                 }
-                context.fillStyle = 'rgba(246, 221, 191, ' + Math.min(time, 1) + ')';
+                context.fillStyle = 'rgba(60,19,39, ' + Math.min(time, 1) + ')';
                 context.fillRect(0, 0, width, height);
 
                 time += 0.1;
@@ -61,18 +61,18 @@ ctx.addEventListener('message', event => {
                 console.log("'setChar' requires a moveLyricInstance");
                 return;
             }
-            context.fillStyle = 'rgb(246, 221, 191)';
+            context.fillStyle = 'rgb(60,19,39)';
             context.fillRect(0, 0, width, height);
 
-            context.font = fontSize + "px 'Hannari,sans-serif'";
-            context.fillStyle = 'rgb(237,139,190)';
+            context.font = fontStyle;
+            context.fillStyle = 'rgb(250, 246, 240)';
             context.fillText(charText, x, y);
             break;
         case 'fallLyric':
             if (moveLyricInstance === null) {
                 console.log("'fallLyric' requires a moveLyricInstance");
                 return;
-            }            
+            }    
             fall(charText, x, y, height);
             break;
         default:
@@ -90,16 +90,16 @@ let fall = (charText: string, x: number, y: number, height: number) => {
 
             let diffY = Math.floor(height / 40) * easeInOutSine(y / height);
 
-            context.fillStyle = 'rgb(246, 221, 191)';
+            context.fillStyle = 'rgb(60,19,39)';
             context.fillRect(x, y - diffY - fontSize, fontSize, fontSize);
             
-            context.font = fontSize + "px 'Hannari,sans-serif'";
-            context.fillStyle = 'rgba(237,139,190, 100)';
+            context.font = fontStyle;
+            context.fillStyle = 'rgba(250, 246, 240, 100)';
             context.fillText(charText, x, y);
 
             y += diffY;
             if (height < y) {
-                context.fillStyle = 'rgb(246, 221, 191)';
+                context.fillStyle = 'rgb(60,19,39)';
                 context.fillRect(x, y - diffY - fontSize, fontSize, fontSize);
                 cancelAnimationFrame(callbackId);
             }
