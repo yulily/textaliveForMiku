@@ -18,7 +18,7 @@ const bgDefaultColor: string = 'rgb(82, 57, 57)';
 const bgChorusColor: string = 'rgb(57, 81, 82)';
 let bgColor: string = bgDefaultColor;
 
-const fontStyle = fontSize + "px '游明朝体', 'YuMincho'";
+const fontStyle = fontSize + "px 'Hannari', '游明朝体', 'YuMincho', serif";
 ctx.addEventListener('message', event => {
 
     if (!offscreenCanvas) {
@@ -33,6 +33,8 @@ ctx.addEventListener('message', event => {
         console.log("couldn't get the offscreenCanvas or couldn't get the OffscreenCanvasRenderingContext2D");
         return;
     }
+
+    console.log(fontStyle);
 
     let width: number = event.data.size.width;
     let height: number = event.data.size.height;
