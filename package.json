@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "description": "",
   "main": "index.js",
+  "homepage": "https://yulily.github.io/textaliveForMiku/",  
   "dependencies": {
     "@types/css-font-loading-module": "0.0.4",
     "@types/react": "^16.9.49",
