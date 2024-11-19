@@ -34,7 +34,6 @@ ctx.addEventListener('message', event => {
         return;
     }
 
-    console.log(fontStyle);
 
     let width: number = event.data.size.width;
     let height: number = event.data.size.height;
